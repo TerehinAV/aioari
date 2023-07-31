@@ -17,6 +17,10 @@ import logging
 log = logging.getLogger(__name__)
 
 
+class WSConnectionClosed(Exception):
+    pass
+
+
 class Client(object):
     """Async ARI Client object.
 
@@ -103,8 +107,8 @@ class Client(object):
             msg = await ws.receive()
             if msg is None:
                 return ## EOF
-            elif msg.type in {aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING}:
-                break
+            elif msg.type in {aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING}:
+                raise WSConnectionClosed("WS connection closed")
             elif msg.type != aiohttp.WSMsgType.TEXT:
                 log.warning("Unknown JSON message type: %s", repr(msg))
                 continue # ignore
